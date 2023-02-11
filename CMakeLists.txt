@@ -1,4 +1,4 @@
-cmake_minimum_required(3.15)
+cmake_minimum_required(VERSION 3.15)
 
 project(kmd_battery_uart_driver VERSION 1.0)
 
@@ -16,6 +16,8 @@ add_library(kmd_battery_uart_driver
   src/kmd_battery_uart_driver/callback_handler.cpp
 )
 
+add_library(dash::kmd_battery_uart_driver ALIAS kmd_battery_uart_driver)
+
 target_include_directories(kmd_battery_uart_driver
 PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -31,3 +33,7 @@ set_target_properties(kmd_battery_uart_driver
 PROPERTIES
   CXX_STANDARD 17
 )
+
+if (${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${CMAKE_SOURCE_DIR})
+  add_subdirectory(${CMAKE_SOURCE_DIR}/examples)
+endif()

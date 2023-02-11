@@ -11,6 +11,11 @@ namespace kmd_battery_uart_driver {
 struct Battery_Message {
 
   /**
+   * @brief Default constructor 
+   */
+  Battery_Message() {};
+
+  /**
    * @brief Construct a new Battery_Message object from a stream of bytes
    * 
    * @param data_ptr a pointer to the buffer data to initialize the Battery_Message from 

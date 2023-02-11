@@ -8,7 +8,9 @@ IO_Worker::~IO_Worker() {
   spdlog::info("kmd_battery_uart_driver: IO_Worker: Shutting down worker");
 }
 
-bool IO_Worker::Initialize_Serial() {
+bool IO_Worker::Initialize_Serial(const std::string device) {
+  m_device = device;
+
   // open serial port
   try {
     m_stream.Open(m_device);
@@ -25,7 +27,6 @@ bool IO_Worker::Initialize_Serial() {
   }
 
   m_stopping_flag.store(false);
-  m_connected.store(true);
   m_background_thread = std::thread([this](){Read();});
 
   return true;
@@ -128,7 +129,7 @@ void IO_Worker::Read() {
   } 
 }
 
-bool IO_Worker::Verify_Checksum(const char const* data_ptr) const {
+bool IO_Worker::Verify_Checksum(const char* data_ptr) const {
   unsigned char tester = 0;
   for (int i = 4; i < 13; i++) {
     tester += *(data_ptr + i);
@@ -136,7 +137,7 @@ bool IO_Worker::Verify_Checksum(const char const* data_ptr) const {
   return (tester == 0xFF);
 }
 
-char IO_Worker::Calculate_Checksum(const char const* data_ptr) const {
+char IO_Worker::Calculate_Checksum(const char* data_ptr) const {
   unsigned char minuser = 0;
   for (int i = 4; i < 12; i++) {
     minuser += *(data_ptr + i);
@@ -156,7 +157,6 @@ void IO_Worker::Close() {
     m_stream.Close();
     spdlog::info("kmd_battery_uart_driver: IO_Worker: CLosed serial port {}", m_device);
   }
-  m_connected.store(false);
 }
 
 } // namespace kmd_battery_uart_driver

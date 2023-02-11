@@ -19,13 +19,6 @@ class IO_Worker {
 
 public:
 
-  /**
-   * @brief Construct a new io worker object
-   * 
-   * @param device The USB device to connect to
-   */
-  IO_Worker(std::string device) {m_device = device;};
-
   ~IO_Worker();
 
   /**
@@ -38,18 +31,11 @@ public:
    * @brief Initializes the serial connection to the battery and starts the background thread that
    * reads from it
    * 
+   * @param device The USB device to connect to
    * @return true on success
    * @return false on failure
    */
-  bool Initialize_Serial();
-
-  /**
-   * @brief Checks the serial connection status to the battery
-   * 
-   * @return true if connected to battery
-   * @return false if not connected to battery
-   */
-  bool Is_Connected() const {return m_connected;};
+  bool Initialize_Serial(const std::string device);
 
   /**
    * @brief Wait until the next message is received
@@ -58,7 +44,30 @@ public:
    */
   void Wait(const unsigned int timeout_milliseconds);
 
-private:
+  /**
+   * @brief Adds a callback function to be called upon the recipt of the correct message type
+   * 
+   * @param data_id ID of the messages to call the callback function on
+   * @param battery_callback_function The callback function to be called
+   */
+  std::multimap<char, Callback_Handler::Battery_Callback_Function>::iterator Insert_Callback(const char data_id, const Callback_Handler::Battery_Callback_Function battery_callback_function) {
+    return m_callback_handler.Insert_Callback(std::move(data_id), std::move(battery_callback_function));
+  }
+
+  /**
+   * @brief Removes a callback function
+   * 
+   * @param callback_function_ptr An iterator pointing to the callback function to remove
+   */
+  void Remove_Callback(std::multimap<char, Callback_Handler::Battery_Callback_Function>::iterator callback_function_ptr) {
+    m_callback_handler.Remove_Callback(callback_function_ptr);
+  }
+
+
+  /**
+   * @brief Shuts down the read thread and the stream
+   */
+  void Close();
 
   /**
    * @brief Sends a message to the battery
@@ -68,6 +77,8 @@ private:
    * @return false otherwise
    */
   bool Send_Message(const Battery_Message& battery_message);
+
+private:
 
   /**
    * @brief This function is called on the m_background_thread to dump available bytes on the read buffer
@@ -81,7 +92,7 @@ private:
    * @param data_ptr The pointer to the data for which to verify the checksum
    * @return bool indicating if the checksum is correct
    */
-  bool Verify_Checksum(const char const* data_ptr) const;
+  bool Verify_Checksum(const char* data_ptr) const;
 
   /**
    * @brief Calculates the checksum value of a series of bytes representing a serialized battery message
@@ -89,12 +100,7 @@ private:
    * @param data_ptr The pointer to the data for which to calculate the checksum
    * @return char Checksum value
    */
-  char Calculate_Checksum(const char const* data_ptr) const;
-
-  /**
-   * @brief Shuts down the read thread 
-   */
-  void Close();
+  char Calculate_Checksum(const char* data_ptr) const;
 
 public:
 
@@ -121,8 +127,6 @@ private:
   std::mutex m_write_mutex;
 
   Callback_Handler m_callback_handler;
-
-  std::atomic<bool> m_connected{false};
 
 }; // class IO_Worker
 
